@@ -1,9 +1,9 @@
-package keys
+package rediscache
 
 const (
 	cachePrefix = "cache:"
 )
 
-func CacheKey(key string) string {
+func cacheKey(key string) string {
 	return cachePrefix + key
 }
