@@ -2,6 +2,8 @@ package main
 
 import (
 	"flag"
+	"github.com/briferz/usdmxn/middleware/tokenmiddleware"
+	"github.com/briferz/usdmxn/middleware/tokenmiddleware/tokencreatorvalidator/redistokencreatorvalidator"
 	"github.com/briferz/usdmxn/servers/controller"
 	"github.com/briferz/usdmxn/servers/controller/ratesource/banxico"
 	"github.com/briferz/usdmxn/servers/controller/ratesource/fixer"
@@ -26,6 +28,7 @@ func main() {
 	log.Println("success reaching Redis.")
 
 	cache := rediscache.New(client)
+	validatorCreator := redistokencreatorvalidator.New(client)
 
 	fixerSource, err := fixer.New(cache, 1*time.Hour)
 	if err != nil {
@@ -44,7 +47,8 @@ func main() {
 	exchangeRateController := controller.New(fixerSource, banxicoSource)
 
 	mux := http.NewServeMux()
-	mux.Handle("/", exchangeRateController)
+	mux.HandleFunc("/token", tokenmiddleware.CreateToken(validatorCreator))
+	mux.HandleFunc("/", tokenmiddleware.WithValidator(validatorCreator, exchangeRateController.ServeHTTP))
 
 	log.Print("Listening...")
 	err = http.ListenAndServe(*bindAddr, mux)
