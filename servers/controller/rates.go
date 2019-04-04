@@ -21,6 +21,12 @@ func New(sources ...ratesource.Interface) http.Handler {
 }
 
 func (e *ratesEndpoint) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+
+	if r.Method != http.MethodGet {
+		w.WriteHeader(http.StatusNotFound)
+		return
+	}
+
 	var providers []model.Provider
 	for i, source := range e.sources {
 		provider, err := source.GetSource()
