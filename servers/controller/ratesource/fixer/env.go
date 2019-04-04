@@ -1,4 +1,4 @@
-package env
+package fixer
 
 import "os"
 
@@ -6,6 +6,6 @@ const (
 	envFixerAPIKey = "FIXER_API_KEY"
 )
 
-func FixerAPIKey() (string, bool) {
+func fixerAPIKey() (string, bool) {
 	return os.LookupEnv(envFixerAPIKey)
 }

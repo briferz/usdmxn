@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/briferz/usdmxn/servers/controller/ratesource"
-	"github.com/briferz/usdmxn/servers/controller/ratesource/fixer/env"
 	"github.com/briferz/usdmxn/servers/model"
 	"github.com/briferz/usdmxn/shared/cache"
 	"io/ioutil"
@@ -141,7 +140,7 @@ func New(cache cache.Interface, updatePeriod time.Duration) (ratesource.Interfac
 		log.Panicf("bad parameters: %v / %v", cache, updatePeriod)
 	}
 
-	apiKey, ok := env.FixerAPIKey()
+	apiKey, ok := fixerAPIKey()
 	if !ok {
 		return nil, fmt.Errorf("the environment variable API key required for Fixer Service is not set")
 	}

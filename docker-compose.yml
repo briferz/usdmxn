@@ -14,3 +14,4 @@ services:
       - REDIS_HOST=redis
       - REDIS_PORT=6379
       - FIXER_API_KEY=7a07d0f0c3ff79174db67fe92bc7142d
+      - BANXICO_API_KEY=aacf7cfb6b4a8427cc8264719d148fb1ee9ffa545bb5b9dad09503eccaa157d8
