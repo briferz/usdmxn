@@ -1,0 +1,10 @@
+FROM golang:alpine
+
+RUN apk add --no-cache git
+
+WORKDIR /project
+COPY ./ ./
+
+RUN go build -mod vendor -o $GOPATH/bin/app ./cmd/exchangeapi/
+
+CMD ["app"]
