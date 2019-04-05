@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"github.com/briferz/usdmxn/middleware/accesslimiter"
+	"github.com/briferz/usdmxn/middleware/timelogger"
 	"github.com/briferz/usdmxn/middleware/tokenmiddleware"
 	"github.com/briferz/usdmxn/middleware/tokenmiddleware/tokencreatorvalidator/redistokencreatorvalidator"
 	"github.com/briferz/usdmxn/servers/controller"
@@ -58,7 +59,7 @@ func main() {
 
 	mux := http.NewServeMux()
 	mux.HandleFunc("/token", tokenmiddleware.CreateToken(validatorCreator))
-	mux.HandleFunc("/", tokenmiddleware.WithValidator(validatorCreator, accesslimiter.WithAccessLimiter(limitEnforcer, exchangeRateController.ServeHTTP)))
+	mux.HandleFunc("/", timelogger.Middleware(tokenmiddleware.WithValidator(validatorCreator, accesslimiter.WithAccessLimiter(limitEnforcer, exchangeRateController.ServeHTTP))))
 
 	log.Print("Listening...")
 	err = http.ListenAndServe(*bindAddr, mux)
