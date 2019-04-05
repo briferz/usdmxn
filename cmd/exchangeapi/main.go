@@ -2,12 +2,14 @@ package main
 
 import (
 	"flag"
+	"github.com/briferz/usdmxn/middleware/accesslimiter"
 	"github.com/briferz/usdmxn/middleware/tokenmiddleware"
 	"github.com/briferz/usdmxn/middleware/tokenmiddleware/tokencreatorvalidator/redistokencreatorvalidator"
 	"github.com/briferz/usdmxn/servers/controller"
 	"github.com/briferz/usdmxn/servers/controller/ratesource/banxico"
 	"github.com/briferz/usdmxn/servers/controller/ratesource/fixer"
 	"github.com/briferz/usdmxn/shared/cache/rediscache"
+	"github.com/briferz/usdmxn/shared/limiter/redislimiter"
 	"github.com/briferz/usdmxn/shared/redis"
 	"log"
 	"net/http"
@@ -18,6 +20,8 @@ import (
 func main() {
 
 	bindAddr := flag.String("-bind", ":8080", "specifies the listen address for this server")
+	maxAllowances := flag.Int("-allowances", 1, "the amount of allowances per period of time")
+	allowancesPeriod := flag.Duration("-period", time.Second, "the time lapse in which the allowances counter is reset")
 	flag.Parse()
 
 	client, err := redis.Client()
@@ -29,6 +33,12 @@ func main() {
 
 	cache := rediscache.New(client)
 	validatorCreator := redistokencreatorvalidator.New(client)
+	limitEnforcer, limiterErrStream := redislimiter.New(client, *allowancesPeriod, int64(*maxAllowances))
+	go func() {
+		for e := range limiterErrStream {
+			log.Printf("error with limiter enforcer: %s", e)
+		}
+	}()
 
 	fixerSource, err := fixer.New(cache, 1*time.Hour)
 	if err != nil {
@@ -48,7 +58,7 @@ func main() {
 
 	mux := http.NewServeMux()
 	mux.HandleFunc("/token", tokenmiddleware.CreateToken(validatorCreator))
-	mux.HandleFunc("/", tokenmiddleware.WithValidator(validatorCreator, exchangeRateController.ServeHTTP))
+	mux.HandleFunc("/", tokenmiddleware.WithValidator(validatorCreator, accesslimiter.WithAccessLimiter(limitEnforcer, exchangeRateController.ServeHTTP)))
 
 	log.Print("Listening...")
 	err = http.ListenAndServe(*bindAddr, mux)

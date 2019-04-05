@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"github.com/briferz/usdmxn/middleware/tokenmiddleware/tokencreatorvalidator"
 	"github.com/go-redis/redis"
-	"log"
 	"time"
 )
 
@@ -37,7 +36,6 @@ func (cv *creatorValidator) Create() (string, error) {
 	h := sha1.New()
 	h.Write([]byte(timeNano))
 	token := fmt.Sprintf("%x", h.Sum(nil))
-	log.Printf("time of %s was converted to => %s", timeNano, token)
 
 	cmd := cv.client.SAdd(redisKeysSet, token)
 	if err := cmd.Err(); err != nil {

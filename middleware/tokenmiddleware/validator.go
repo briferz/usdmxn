@@ -7,11 +7,11 @@ import (
 	"net/http"
 )
 
-const tokenQuery = "token"
+const TokenQuery = "token"
 
 func WithValidator(v tokencreatorvalidator.Validator, next http.HandlerFunc) http.HandlerFunc {
 	return func(writer http.ResponseWriter, request *http.Request) {
-		token := request.URL.Query().Get(tokenQuery)
+		token := request.URL.Query().Get(TokenQuery)
 		if token == "" {
 			writer.Header().Set("Content-Type", "application/json;charset=UTF-8")
 			writer.WriteHeader(http.StatusBadRequest)
@@ -57,6 +57,8 @@ func CreateToken(c tokencreatorvalidator.Creator) http.HandlerFunc {
 			})
 			return
 		}
+
+		writer.Header().Set("Content-Type", "application/json;charset=UTF-8")
 		json.NewEncoder(writer).Encode(map[string]string{
 			"token": newToken,
 		})
